@@ -1,0 +1,42 @@
+
+name: Build SFC Tournament APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'SFC_Tournament_Android_Project.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project
+        run: |
+          mkdir project
+          unzip -q SFC_Tournament_Android_Project.zip -d project
+          find project -name settings.gradle -o -name settings.gradle.kts
+
+      - name: Build APK
+        run: |
+          cd project
+          PROJECT_DIR=$(dirname "$(find . -name settings.gradle -o -name settings.gradle.kts | head -n 1)")
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SFC-Tournament-APK
+          path: project/**/build/outputs/apk/debug/*.apk
+          
